@@ -1,0 +1,8 @@
+# front end project
+node_modules
+
+*.log
+*.log.*
+*.local
+dist
+build

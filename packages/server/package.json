@@ -1,0 +1,8 @@
+{
+  "name": "@msunsoft/avocado-server",
+  "version": "0.0.0",
+  "scripts": {},
+  "devDependencies": {
+    "@types/node": "^20.12.5"
+  }
+}
