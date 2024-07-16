@@ -1,6 +1,5 @@
 // @ts-nocheck
 
-export default runtime
 export namespace runtime {
   export const isBrowser = globalThis.window?.document !== undefined
 
@@ -31,3 +30,5 @@ export namespace runtime {
     typeof ServiceWorkerGlobalScope !== "undefined" &&
     globalThis instanceof ServiceWorkerGlobalScope
 }
+
+export default runtime
