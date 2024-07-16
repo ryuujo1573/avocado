@@ -1,5 +1,6 @@
 // @ts-nocheck
 
+export default runtime
 export namespace runtime {
   export const isBrowser = globalThis.window?.document !== undefined
 

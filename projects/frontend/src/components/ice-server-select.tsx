@@ -1,3 +1,4 @@
+/// <reference lib="dom"/>
 import { $, component$, useSignal, useStore } from "@builder.io/qwik";
 import { LuX, LuPlus } from "@qwikest/icons/lucide";
 
@@ -51,7 +52,7 @@ export const IceServer = component$(() => {
   );
 
   return (
-    <div class="card card-bordered card-compact w-fit max-w-xl bg-primary-content text-primary dark:bg-neutral">
+    <div class="card-compact card card-bordered w-fit max-w-xl bg-primary-content text-primary dark:bg-neutral">
       <div class="card-body">
         <div class="card-title">ICE Servers</div>
         <ul class="menu px-0">

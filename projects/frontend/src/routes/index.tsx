@@ -1,7 +1,7 @@
 /// <reference no-default-lib="true" />
 import { $, component$, useOnWindow } from "@builder.io/qwik";
 import type { DocumentHead } from "@builder.io/qwik-city";
-import { logger } from "@avocado/avocado-common/qos";
+import { logger } from "@avocado/core/qos";
 import { IceServer } from "~/components/ice-server-select";
 
 export default component$(() => {

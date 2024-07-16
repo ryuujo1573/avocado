@@ -1,7 +1,6 @@
 {
   "extends": "@tsconfig/node20",
   "compilerOptions": {
-    "rootDir": "src",
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "noEmit": true

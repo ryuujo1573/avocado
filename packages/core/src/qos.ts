@@ -1,4 +1,4 @@
-import * as runtime from "./runtime"
+import runtime from "./runtime"
 
 const badgeLike =
   "padding: .2em 1ch; border-radius: 2px; font-size: 0.8em; font-weight: bold;"
