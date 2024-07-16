@@ -117,7 +117,7 @@ const app = new Hono<AppEnv>()
                   data: {
                     uid: "admin",
                     name: "admin",
-                    email: "admin@msuncloud.com",
+                    email: "admin@example.com",
                     ...(action.payload ?? {}),
                   },
                 })
