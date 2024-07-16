@@ -1,0 +1,33 @@
+{
+  "name": "avocado-server",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --hot run src/main.ts",
+    "dev.node": "tsx watch src/main.ts",
+    "prisma": "prisma",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@avocado/core": "workspace:latest",
+    "@reduxjs/toolkit": "^2.2.5",
+    "@types/ws": "^8.5.10",
+    "hono": "^4.3.3",
+    "redux": "^5.0.1",
+    "ws": "^8.17.0"
+  },
+  "devDependencies": {
+    "@tsconfig/node20": "^20.1.4",
+    "@types/bun": "^1.1.1",
+    "@types/node": "^20.11.17",
+    "dotenv": "^16.4.5",
+    "dotenv-expand": "^11.0.6",
+    "tsx": "^4.7.1",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.10",
+    "vitest": "^1.6.0"
+  },
+  "optionalDependencies": {
+    "@hono/node-server": "^1.11.1"
+  }
+}

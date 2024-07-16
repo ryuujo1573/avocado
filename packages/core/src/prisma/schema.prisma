@@ -1,0 +1,78 @@
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/client"
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt DateTime @default(now())
+  email     String   @unique
+  uid       String   @unique
+  name      String
+  role      Role     @default(USER)
+  posts     Post[]
+  Mesh      Mesh[]
+}
+
+model Mesh {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String   @unique
+  createdBy User     @relation(fields: [userId], references: [id]) // @relation
+  createdAt DateTime @default(now())
+  userId    String   @db.ObjectId
+}
+
+model Device {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  agent        AgentType
+  hostname     String // uname -n
+  os           OS // uname -s
+  arch         Arch // uname -m
+  osVer        String // uname -r
+  activeUser   String
+  createdAt    DateTime  @default(now())
+  lastBootTime DateTime  @default(now())
+  lastModified DateTime  @updatedAt
+}
+
+model Post {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  published Boolean  @default(false)
+  title     String
+  author    User?    @relation(fields: [authorId], references: [id])
+  authorId  String   @db.ObjectId
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum AgentType {
+  dedicate
+  daemon
+}
+
+enum OS {
+  nt
+  darwin
+  linux
+  bsd
+}
+
+enum Arch {
+  i386
+  ia64
+  aarch64 // Apple Silicon
+  armv7
+  arm64
+  mips
+  riscv
+}

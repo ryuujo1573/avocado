@@ -1,0 +1,60 @@
+{
+  "name": "@avocado/core",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "postinstall": "prisma generate"
+  },
+  "exports": {
+    ".": {
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./qos": {
+      "require": "./dist/qos.cjs",
+      "import": "./dist/qos.js",
+      "types": "./dist/qos.d.ts"
+    },
+    "./orm/*": "./src/prisma/generated/client/*",
+    "./orm": {
+      "require": {
+        "node": "./src/prisma/generated/client/index.js",
+        "edge-light": "./src/prisma/generated/client/wasm.js",
+        "workerd": "./src/prisma/generated/client/wasm.js",
+        "worker": "./src/prisma/generated/client/wasm.js",
+        "browser": "./src/prisma/generated/client/index-browser.js",
+        "default": "./src/prisma/generated/client/index.js"
+      },
+      "import": {
+        "node": "./src/prisma/generated/client/index.js",
+        "edge-light": "./src/prisma/generated/client/wasm.js",
+        "workerd": "./src/prisma/generated/client/wasm.js",
+        "worker": "./src/prisma/generated/client/wasm.js",
+        "browser": "./src/prisma/generated/client/index-browser.js",
+        "default": "./src/prisma/generated/client/index.js"
+      },
+      "default": "./index.js"
+    }
+  },
+  "devDependencies": {
+    "@tsconfig/node20": "^20.1.4",
+    "@types/bun": "^1.1.1",
+    "@types/node": "20",
+    "prisma": "^5.14.0",
+    "rollup": "^4.17.2",
+    "typescript": "5.4.4",
+    "vite": "^5.2.10",
+    "vite-plugin-dts": "^3.9.1",
+    "vitest": "^1.6.0"
+  },
+  "dependencies": {
+    "@prisma/client": "5.14.0",
+    "@reduxjs/toolkit": "^2.2.5",
+    "redux": "^5.0.1"
+  },
+  "prisma": {
+    "schema": "src/prisma/schema.prisma"
+  }
+}

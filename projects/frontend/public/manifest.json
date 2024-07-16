@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json.schemastore.org/web-manifest-combined.json",
+  "name": "qwik-rac-web-panel",
+  "short_name": "RAC Panel",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#fff",
+  "description": "<todo>"
+}

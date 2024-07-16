@@ -1,0 +1,7 @@
+{
+  "extends": "@tsconfig/node20",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "bundler"
+  }
+}

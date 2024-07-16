@@ -1,0 +1,38 @@
+{
+  "private": true,
+  "author": "张新伟 <me@shencang.blue>",
+  "engineStrict": true,
+  "engines": {
+    "node": "^20.12.2 || >= 22.0.0"
+  },
+  "scripts": {
+    "core": "pnpm --filter @avocado/core",
+    "netstat": "pnpm --filter @avocado/netstat-lib",
+    "agent": "pnpm --filter avocado-agent",
+    "app": "pnpm --filter avocado-app",
+    "server": "pnpm --filter avocado-app-server"
+  },
+  "devDependencies": {
+    "@types/node": "20.x.x",
+    "eslint": "^9.0.0",
+    "prettier": "^3.2.5",
+    "prettier-eslint": "^16.3.0",
+    "typescript": "^5.4.4",
+    "vite": "^5.1.6",
+    "vitest": "^1.6.0"
+  },
+  "overrides": {
+    "typescript": "$typescript",
+    "eslint": "$eslint",
+    "prettier": "$prettier",
+    "prettier-eslint": "$prettier-eslint",
+    "vite": "$vite",
+    "vitest": "$vitest",
+    "@types/node": "$@types/node"
+  },
+  "prettier": {
+    "semi": false,
+    "tabWidth": 2
+  },
+  "packageManager": "pnpm@9.1.2"
+}
