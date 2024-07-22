@@ -10,7 +10,7 @@
     "netstat": "pnpm --filter @avocado/netstat-lib",
     "agent": "pnpm --filter avocado-agent",
     "app": "pnpm --filter avocado-app",
-    "server": "pnpm --filter avocado-app-server"
+    "api": "pnpm --filter avocado-server"
   },
   "devDependencies": {
     "@types/node": "20.x.x",
@@ -31,7 +31,7 @@
     "@types/node": "$@types/node"
   },
   "prettier": {
-    "semi": false,
+    "semi": true,
     "tabWidth": 2
   },
   "packageManager": "pnpm@9.1.2"

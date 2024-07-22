@@ -1,26 +1,28 @@
-import { Context, Env, Hono } from "hono"
-import { upgradeWebSocket } from "./adapter"
-import { Prisma, PrismaClient } from "@avocado/core/orm"
-import { logger as log } from "@avocado/core/qos"
+import { Context, Env, Hono } from "hono";
+import { upgradeWebSocket } from "./adapter";
+import { Prisma, PrismaClient } from "@avocado/core/orm";
+import { logger as log, logger } from "@avocado/core/qos";
 
 declare global {
   interface AppEnv extends Env {
-    Variables: {}
+    Variables: {};
   }
 }
 
-const db = new PrismaClient()
+const db = new PrismaClient();
 
-await db.$connect()
+db.$connect().catch((e) => {
+  logger.e(e);
+});
 
 const app = new Hono<AppEnv>()
   .use((c, next) => {
-    return next()
+    return next();
   })
   .get("/__register__", async (c) => {
-    const rand = Array.from(crypto.getRandomValues(new Uint8Array(6)))
+    const rand = Array.from(crypto.getRandomValues(new Uint8Array(6)));
 
-    const randStr = rand.map((v) => v.toString(16)).join("")
+    const randStr = rand.map((v) => v.toString(16)).join("");
     return c.html(
       <div>
         <style>{`.col { display: flex; flex-direction: column; width: min-content; gap: .4rem; }`}</style>
@@ -35,7 +37,7 @@ const app = new Hono<AppEnv>()
         </form>
         <iframe name="resp" />
       </div>,
-    )
+    );
   })
   .post("/__register__", async (c) => {
     const { uid, name, email } =
@@ -43,38 +45,38 @@ const app = new Hono<AppEnv>()
         ? await c.req.json()
         : (Object.fromEntries(
             (await c.req.formData()).entries(),
-          ) as unknown as Prisma.UserCreateInput)
+          ) as unknown as Prisma.UserCreateInput);
 
     const pick = {
       uid,
       name,
       email,
-    }
+    };
 
     const existed = await db.user.findFirst({
       where: {
         OR: [{ uid }, { email }],
       },
-    })
+    });
 
     if (existed) {
-      return c.json({ error: "User exists" }, 400)
+      return c.json({ error: "User exists" }, 400);
     }
 
     await db.user.create({
       data: {
         ...pick,
       },
-    })
+    });
 
-    return c.json({ status: "ok" })
+    return c.json({ status: "ok" });
   })
   .get("/users", async (c) => {
-    return c.json(await db.user.findMany())
+    return c.json(await db.user.findMany());
   })
   .get("/sync.magic", async (c, next) => {
     if (c.req.header("Upgrade")) {
-      return await next()
+      return await next();
     }
     return c.html(
       <>
@@ -89,29 +91,29 @@ const app = new Hono<AppEnv>()
           }}
         ></script>
       </>,
-    )
+    );
   })
   .get(
     "/sync.magic",
     upgradeWebSocket((c: Context<AppEnv>) => {
       return {
         async onOpen(e, ws) {
-          log.i("client open")
+          log.i("client open");
         },
         async onMessage(e, ws) {
           if (typeof e.data == "string") {
-            const action = JSON.parse(e.data)
-            log.i("received %o", action)
+            const action = JSON.parse(e.data);
+            log.i("received %o", action);
             if (action.type == "register") {
-              const { uid, email } = action.payload
+              const { uid, email } = action.payload;
               const existed = await db.user.findFirst({
                 where: {
                   OR: [{ uid }, { email }],
                 },
-              })
+              });
 
               if (existed) {
-                log.w("user existed %o", existed)
+                log.w("user existed %o", existed);
               } else {
                 const user = await db.user.create({
                   data: {
@@ -120,17 +122,17 @@ const app = new Hono<AppEnv>()
                     email: "admin@example.com",
                     ...(action.payload ?? {}),
                   },
-                })
+                });
 
-                log.i("created user: %o", user)
+                log.i("created user: %o", user);
               }
             }
           }
         },
-      }
+      };
     }),
-  )
+  );
 
-export default app
+export default app;
 
-export type App = typeof app
+export type App = typeof app;
