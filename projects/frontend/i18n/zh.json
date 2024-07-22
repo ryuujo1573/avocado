@@ -1,0 +1,16 @@
+{
+  "locale": "zh",
+  "name": "中文",
+  "translations": {
+    "List of devices": "设备列表",
+    "Mesh": "组",
+    "click to copy": "点击复制",
+    "Language": "语言",
+    "Home": "首页",
+    "Devices": "设备",
+    "Files": "文件",
+    "Accounts": "账号",
+    "Server": "管理",
+    "Dark mode": "深色模式"
+  }
+}

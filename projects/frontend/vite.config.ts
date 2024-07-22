@@ -6,6 +6,7 @@ import { defineConfig, type UserConfig } from "vite";
 import { qwikVite } from "@builder.io/qwik/optimizer";
 import { qwikCity } from "@builder.io/qwik-city/vite";
 import tsconfigPaths from "vite-tsconfig-paths";
+import { i18nPlugin } from 'compiled-i18n/vite'
 import pkg from "./package.json";
 
 const { dependencies = {}, devDependencies = {} } = pkg as any as {
@@ -19,7 +20,14 @@ const { dependencies = {}, devDependencies = {} } = pkg as any as {
  */
 export default defineConfig(({ command, mode }): UserConfig => {
   return {
-    plugins: [qwikCity(), qwikVite(), tsconfigPaths()],
+    plugins: [
+      qwikCity(),
+      qwikVite(),
+      tsconfigPaths(),
+      i18nPlugin({
+        locales: ['en', 'zh']
+      }),
+    ],
     // This tells Vite which dependencies to pre-build in dev mode.
     optimizeDeps: {
       // Put problematic deps that break bundling here, mostly those with binaries.

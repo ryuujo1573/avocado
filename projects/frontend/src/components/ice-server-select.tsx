@@ -52,11 +52,11 @@ export const IceServer = component$(() => {
   );
 
   return (
-    <div class="card-compact card card-bordered w-fit max-w-xl bg-primary-content text-primary dark:bg-neutral">
+    <div class="card card-bordered card-compact w-fit max-w-xl bg-primary-content text-primary dark:bg-neutral">
       <div class="card-body">
         <div class="card-title">ICE Servers</div>
         <ul class="menu px-0">
-          {store.iceServers.map((iceServer, _, arr) => (
+          {store.iceServers.map((iceServer) => (
             <li class="" key={iceServer.urls.toString()}>
               <div class="flex-1">
                 {iceServer.urls}
