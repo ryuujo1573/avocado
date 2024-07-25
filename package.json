@@ -17,12 +17,11 @@
     "eslint": "^9.0.0",
     "prettier": "^3.2.5",
     "prettier-eslint": "^16.3.0",
-    "typescript": "^5.4.4",
     "vite": "^5.1.6",
     "vitest": "^1.6.0"
   },
-  "overrides": {
-    "typescript": "$typescript",
+  "resolutions": {
+    "typescript": "latest",
     "eslint": "$eslint",
     "prettier": "$prettier",
     "prettier-eslint": "$prettier-eslint",
