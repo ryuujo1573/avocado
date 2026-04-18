@@ -3,9 +3,9 @@
 Catalogue of product specifications. Each spec describes a user-facing feature or
 workflow from a product perspective (not an implementation perspective).
 
-| Spec         | Status | Summary |
-| ------------ | ------ | ------- |
-| _(none yet)_ | —      | —       |
+| Spec                                                 | Status       | Summary                                                                          |
+| ---------------------------------------------------- | ------------ | -------------------------------------------------------------------------------- |
+| [remote-access-center.md](./remote-access-center.md) | 🔵 In Design | Fleet monitoring, remote control, file transfer, background jobs, OTA management |
 
 ## How to Add a Spec
 

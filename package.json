@@ -6,26 +6,21 @@
     "node": "^20.12.2 || >= 22.0.0"
   },
   "scripts": {
-    "core": "pnpm --filter @avocado/core",
-    "netstat": "pnpm --filter @avocado/netstat-lib",
-    "agent": "pnpm --filter avocado-agent",
-    "app": "pnpm --filter avocado-app",
-    "api": "pnpm --filter avocado-server"
+    "core": "bun --filter @avocado/core",
+    "netstat": "bun --filter @avocado/netstat-lib",
+    "agent": "bun --filter ./projects/agent",
+    "app": "bun --cwd ./projects/frontend",
+    "api": "bun --cwd ./projects/backend"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.10",
     "@types/node": "20.x.x",
-    "eslint": "^9.0.0",
-    "prettier": "^3.2.5",
-    "prettier-eslint": "^16.3.0",
-    "typescript": "^5.4.4",
-    "vite": "^5.1.6",
-    "vitest": "^1.6.0"
+    "typescript": "^6.0.2",
+    "vite": "^8.0.3",
+    "vitest": "^4.1.2"
   },
   "overrides": {
     "typescript": "$typescript",
-    "eslint": "$eslint",
-    "prettier": "$prettier",
-    "prettier-eslint": "$prettier-eslint",
     "vite": "$vite",
     "vitest": "$vitest",
     "@types/node": "$@types/node"
@@ -34,5 +29,9 @@
     "semi": true,
     "tabWidth": 2
   },
-  "packageManager": "pnpm@9.1.2"
+  "packageManager": "bun@1.3.11",
+  "workspaces": [
+    "packages/*",
+    "projects/*"
+  ]
 }

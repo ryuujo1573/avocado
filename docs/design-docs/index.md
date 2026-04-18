@@ -2,9 +2,11 @@
 
 Catalogue of all design documents. Add an entry here whenever a new design doc is created.
 
-| Document                             | Status    | Summary                                                       |
-| ------------------------------------ | --------- | ------------------------------------------------------------- |
-| [core-beliefs.md](./core-beliefs.md) | ✅ Active | Foundational operating principles for agent-first development |
+| Document                             | Status    | Summary                                                                                 |
+| ------------------------------------ | --------- | --------------------------------------------------------------------------------------- |
+| [core-beliefs.md](./core-beliefs.md) | ✅ Active | Foundational operating principles — 6 constraints that drive all architecture decisions |
+| [connectivity.md](./connectivity.md) | ✅ Active | Control channel (WebSocket) + data channel (WebRTC P2P/TURN) design                     |
+| [ota-plugins.md](./ota-plugins.md)   | ✅ Active | OTA plugin bundle format, WASM sandbox model, signing, and registry                     |
 
 ## How to Add a Design Doc
 
