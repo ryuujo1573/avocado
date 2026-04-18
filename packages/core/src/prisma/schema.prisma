@@ -1,5 +1,5 @@
 datasource db {
-  provider = "mongodb"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -8,71 +8,65 @@ generator client {
   output   = "./generated/client"
 }
 
-model User {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  createdAt DateTime @default(now())
-  email     String   @unique
-  uid       String   @unique
+// Every table that is not Org carries org_id from day one,
+// so multi-tenancy can be added without a data migration.
+
+model Org {
+  id        String            @id @default(cuid())
   name      String
-  role      Role     @default(USER)
-  posts     Post[]
-  Mesh      Mesh[]
+  createdAt DateTime          @default(now())
+  users     User[]
+  agents    Agent[]
+  tokens    EnrollmentToken[]
+  sessions  Session[]
 }
 
-model Mesh {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  name      String   @unique
-  createdBy User     @relation(fields: [userId], references: [id]) // @relation
-  createdAt DateTime @default(now())
-  userId    String   @db.ObjectId
-}
-
-model Device {
-  id           String    @id @default(auto()) @map("_id") @db.ObjectId
-  agent        AgentType
-  hostname     String // uname -n
-  os           OS // uname -s
-  arch         Arch // uname -m
-  osVer        String // uname -r
-  activeUser   String
+model User {
+  id           String    @id @default(cuid())
+  orgId        String
+  org          Org       @relation(fields: [orgId], references: [id])
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         String    @default("operator")
   createdAt    DateTime  @default(now())
-  lastBootTime DateTime  @default(now())
-  lastModified DateTime  @updatedAt
+  sessions     Session[]
 }
 
-model Post {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  published Boolean  @default(false)
-  title     String
-  author    User?    @relation(fields: [authorId], references: [id])
-  authorId  String   @db.ObjectId
+model Agent {
+  id         String    @id @default(cuid())
+  orgId      String
+  org        Org       @relation(fields: [orgId], references: [id])
+  hostname   String
+  os         String    @default("unknown")
+  arch       String    @default("unknown")
+  credential String    @unique
+  status     String    @default("offline")
+  lastSeenAt DateTime?
+  createdAt  DateTime  @default(now())
+  sessions   Session[]
 }
 
-enum Role {
-  USER
-  ADMIN
+model EnrollmentToken {
+  id        String    @id @default(cuid())
+  orgId     String
+  org       Org       @relation(fields: [orgId], references: [id])
+  token     String    @unique
+  usedAt    DateTime?
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
 }
 
-enum AgentType {
-  dedicate
-  daemon
-}
-
-enum OS {
-  nt
-  darwin
-  linux
-  bsd
-}
-
-enum Arch {
-  i386
-  ia64
-  aarch64 // Apple Silicon
-  armv7
-  arm64
-  mips
-  riscv
+model Session {
+  id           String    @id @default(cuid())
+  orgId        String
+  org          Org       @relation(fields: [orgId], references: [id])
+  agentId      String
+  agent        Agent     @relation(fields: [agentId], references: [id])
+  userId       String
+  user         User      @relation(fields: [userId], references: [id])
+  traceId      String    @unique
+  startedAt    DateTime  @default(now())
+  endedAt      DateTime?
+  transferMeta Json?
 }

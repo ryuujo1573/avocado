@@ -47,8 +47,11 @@ export default component$(() => {
             role="radiogroup"
             class="menu flex w-52 flex-col gap-1"
             onClick$={(e) => {
-              if (e.target instanceof HTMLDivElement) {
-                currTab.value = e.target.getAttribute("aria-id") ?? "unknown";
+              const el = (e.target as Element).closest<HTMLElement>(
+                "[data-id]",
+              );
+              if (el) {
+                currTab.value = el.dataset.id ?? "unknown";
                 logger.i(currTab.value);
               }
             }}
@@ -59,9 +62,9 @@ export default component$(() => {
                 <li key={id}>
                   <div
                     role="radio"
-                    aria-id={id}
+                    data-id={id}
                     aria-label={name}
-                    aria-selected={isCurrent}
+                    aria-checked={isCurrent}
                     aria-disabled={isCurrent}
                     class={`${isCurrent ? "active" : ""}`}
                   >
@@ -80,15 +83,13 @@ export default component$(() => {
         </div>
         <div class="flex items-center gap-1">
           <BsLightbulbFill />
-          <span
-            class={`select-none text-sm before:inline before:content-[inherit]`}
-            style={{ "--tw-content": `"${localize`Dark mode`}"` }}
-          ></span>
+          <span class="select-none text-sm">{localize`Dark mode`}</span>
         </div>
       </div>
       <main class="flex flex-auto flex-col overflow-hidden bg-base-300 p-4">
         {h(
-          entries.find((mod) => mod.pageMeta.id == currTab.value)!.default,
+          (entries.find((mod) => mod.pageMeta.id === currTab.value) ??
+            entries[0])!.default,
           {},
         )}
       </main>

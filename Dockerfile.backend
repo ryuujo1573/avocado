@@ -1,0 +1,24 @@
+FROM oven/bun:1 AS base
+WORKDIR /app
+
+# Install system deps for node-pty (if needed by backend — agent uses it)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openssl ca-certificates curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy workspace config
+COPY package.json bun.lockb* ./
+COPY packages/core/package.json packages/core/
+COPY projects/backend/package.json projects/backend/
+
+# Copy source before install so postinstall (prisma generate) can find the schema
+COPY packages/core packages/core
+COPY projects/backend projects/backend
+
+# Install; postinstall runs prisma generate using the pinned version
+RUN DATABASE_URL="postgresql://dummy:dummy@localhost/dummy" \
+    bun install --frozen-lockfile
+
+# Run DB migrations + seed then start server
+WORKDIR /app/projects/backend
+CMD ["sh", "-c", "cd /app/packages/core && bun run db:push && bun run seed; cd /app/projects/backend && bun run src/main.ts"]

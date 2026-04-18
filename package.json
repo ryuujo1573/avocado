@@ -10,7 +10,9 @@
     "netstat": "bun --filter @avocado/netstat-lib",
     "agent": "bun --filter ./projects/agent",
     "app": "bun --cwd ./projects/frontend",
-    "api": "bun --cwd ./projects/backend"
+    "api": "bun --cwd ./projects/backend",
+    "demo": "bash ./scripts/demo.sh",
+    "demo:up": "docker compose up -d && bash ./scripts/demo.sh"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.10",

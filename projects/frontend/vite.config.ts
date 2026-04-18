@@ -5,8 +5,7 @@
 import { defineConfig, type UserConfig } from "vite";
 import { qwikVite } from "@builder.io/qwik/optimizer";
 import { qwikCity } from "@builder.io/qwik-city/vite";
-import tsconfigPaths from "vite-tsconfig-paths";
-import { i18nPlugin } from 'compiled-i18n/vite'
+import { i18nPlugin } from "compiled-i18n/vite";
 import pkg from "./package.json";
 
 const { dependencies = {}, devDependencies = {} } = pkg as any as {
@@ -23,11 +22,13 @@ export default defineConfig(({ command, mode }): UserConfig => {
     plugins: [
       qwikCity(),
       qwikVite(),
-      tsconfigPaths(),
       i18nPlugin({
-        locales: ['en', 'zh']
+        locales: ["en", "zh"],
       }),
     ],
+    resolve: {
+      tsconfigPaths: true,
+    },
     // This tells Vite which dependencies to pre-build in dev mode.
     optimizeDeps: {
       // Put problematic deps that break bundling here, mostly those with binaries.
@@ -52,6 +53,19 @@ export default defineConfig(({ command, mode }): UserConfig => {
       headers: {
         // Don't cache the server response in dev mode
         "Cache-Control": "public, max-age=0",
+      },
+      proxy: {
+        // Proxy all backend API and WS calls to the backend in dev
+        "/auth": { target: "http://localhost:3000", changeOrigin: true },
+        "/agents": { target: "http://localhost:3000", changeOrigin: true },
+        "/sessions": { target: "http://localhost:3000", changeOrigin: true },
+        "/enroll": { target: "http://localhost:3000", changeOrigin: true },
+        "/healthz": { target: "http://localhost:3000", changeOrigin: true },
+        "/ws": {
+          target: "ws://localhost:3000",
+          changeOrigin: true,
+          ws: true,
+        },
       },
     },
     preview: {

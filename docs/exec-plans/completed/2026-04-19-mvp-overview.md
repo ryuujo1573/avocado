@@ -4,7 +4,6 @@
 **Status:** completed
 **Owner:** core team
 **Related:**
-
 - Spec: [docs/product-specs/remote-access-center.md](../../product-specs/remote-access-center.md)
 - Architecture: [ARCHITECTURE.md](../../../ARCHITECTURE.md)
 - Design: [docs/design-docs/connectivity.md](../../design-docs/connectivity.md)

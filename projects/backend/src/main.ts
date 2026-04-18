@@ -1,9 +1,31 @@
 import { runtime } from "@avocado/core";
 import { logger } from "@avocado/core/qos";
 import { fileURLToPath } from "url";
-import { loadEnvFile } from "process";
 import app from "./app";
 import chalk from "chalk";
+
+/** Load a .env file, silently ignoring if it doesn't exist. Works on Bun + Node. */
+function tryLoadEnv(path: string) {
+  try {
+    // Bun native
+    if (
+      typeof (process as unknown as { loadEnvFile?: (p: string) => void })
+        .loadEnvFile === "function"
+    ) {
+      (process as unknown as { loadEnvFile: (p: string) => void }).loadEnvFile(
+        path,
+      );
+      return;
+    }
+    // Node 20.12+
+    const { loadEnvFile } = require("process") as {
+      loadEnvFile?: (p: string) => void;
+    };
+    loadEnvFile?.(path);
+  } catch {
+    // file not found or API unavailable — ignore
+  }
+}
 
 let url: URL | undefined;
 
@@ -11,14 +33,17 @@ const isExecuted = fileURLToPath(import.meta.url).includes(process.argv[1]);
 if (isExecuted) {
   const t0 = performance.now();
   try {
-    loadEnvFile(".env.local");
-    loadEnvFile(".env");
+    tryLoadEnv(".env.local");
+    tryLoadEnv(".env");
   } catch {
-    loadEnvFile(".env");
+    // ignore
   }
   const args = process.argv.slice(2);
 
-  const hostname = args.includes("--host") ? "0.0.0.0" : "localhost";
+  const hostname = args.includes("--host")
+    ? "0.0.0.0"
+    : process.env.HOST ??
+      (process.env.NODE_ENV === "production" ? "0.0.0.0" : "localhost");
   const port = parseInt(process.env.PORT || "3000");
   const isDev = !(process.env.NODE_ENV === "production");
 

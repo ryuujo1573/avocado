@@ -1,0 +1,57 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: avocado
+      POSTGRES_PASSWORD: avocado
+      POSTGRES_DB: avocado
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U avocado" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  coturn:
+    image: coturn/coturn:latest
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      DETECT_EXTERNAL_IP: "yes"
+    command: >
+      --lt-cred-mech --use-auth-secret --static-auth-secret=${COTURN_SECRET:-avocado-coturn-secret-change-in-prod} --realm=avocado.local --min-port=49152 --max-port=65535 --no-cli --log-file=stdout
+    ports:
+      - "3478:3478/udp"
+      - "3478:3478/tcp"
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://avocado:avocado@postgres:5432/avocado
+      JWT_SECRET: ${JWT_SECRET:-avocado-dev-secret-change-in-prod}
+      COTURN_SECRET: ${COTURN_SECRET:-avocado-coturn-secret-change-in-prod}
+      COTURN_HOST: ${COTURN_HOST:-localhost}
+      COTURN_PORT: ${COTURN_PORT:-3478}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+      PORT: 3000
+      NODE_ENV: production
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -sf http://localhost:3000/healthz | grep -q '\"status\":\"ok\"'" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
