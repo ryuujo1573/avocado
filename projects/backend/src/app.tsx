@@ -8,6 +8,7 @@ import { parseWireMessage, type WireMessage } from "@avocado/core/protocol";
 import {
   agents,
   broadcastToDashboards,
+  channelSessions,
   dashboards,
   sessions,
   type AgentEntry,
@@ -398,10 +399,23 @@ const app = new Hono()
               break;
             }
 
-            // Signaling relay: agent → operator
+            // Signaling relay: agent → operator (kept for future WebRTC use)
             case "signal-answer":
             case "ice-candidate": {
               const session = sessions.get(msg.sessionId);
+              if (session?.dashWs) session.dashWs.send(raw);
+              break;
+            }
+
+            // Channel relay: agent → dashboard
+            case "shell-output":
+            case "shell-exit":
+            case "channel-close":
+            case "file-chunk":
+            case "file-checksum":
+            case "file-error": {
+              const sessionId = channelSessions.get(msg.channelId);
+              const session = sessionId ? sessions.get(sessionId) : null;
               if (session?.dashWs) session.dashWs.send(raw);
               break;
             }
@@ -512,6 +526,7 @@ const app = new Hono()
           }
 
           switch (msg.kind) {
+            // Signaling relay: operator → agent (kept for future WebRTC use)
             case "signal-offer": {
               const session = sessions.get(msg.sessionId);
               if (session) session.dashWs = ws;
@@ -521,6 +536,33 @@ const app = new Hono()
             }
             case "ice-candidate": {
               const agentWs = sessions.get(msg.sessionId)?.agentWs;
+              if (agentWs) agentWs.send(raw);
+              break;
+            }
+
+            // Channel relay: dashboard → agent
+            case "open-channel": {
+              const session = sessions.get(msg.sessionId);
+              if (!session) {
+                ws.send(
+                  JSON.stringify({
+                    kind: "error",
+                    code: "SESSION_NOT_FOUND",
+                    message: `Session ${msg.sessionId} not found`,
+                  }),
+                );
+                break;
+              }
+              session.dashWs = ws;
+              channelSessions.set(msg.channelId, msg.sessionId);
+              if (session.agentWs) session.agentWs.send(raw);
+              break;
+            }
+            case "shell-input":
+            case "shell-resize":
+            case "channel-close": {
+              const sessionId = channelSessions.get(msg.channelId);
+              const agentWs = sessionId ? sessions.get(sessionId)?.agentWs : null;
               if (agentWs) agentWs.send(raw);
               break;
             }
@@ -534,6 +576,11 @@ const app = new Hono()
           dashboards.delete(userId);
           for (const [, session] of sessions) {
             if (session.userId === userId) session.dashWs = null;
+          }
+          // Clean up channel→session mappings for this user's sessions
+          for (const [channelId, sessionId] of channelSessions) {
+            const session = sessions.get(sessionId);
+            if (session?.userId === userId) channelSessions.delete(channelId);
           }
         },
 

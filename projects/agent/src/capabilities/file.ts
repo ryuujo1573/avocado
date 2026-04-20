@@ -5,16 +5,9 @@
  * Security: paths are validated against an allow-list before any I/O.
  * Integrity: sha256 verified on both sides.
  */
-import { createHash, createReadStream } from "node:crypto";
-import {
-  createWriteStream,
-  existsSync,
-  renameSync,
-  statSync,
-  unlinkSync,
-} from "node:fs";
+import { createHash } from "node:crypto";
+import { createWriteStream, existsSync, renameSync, unlinkSync } from "node:fs";
 import { resolve, dirname } from "node:path";
-import { homedir } from "node:os";
 import { randomUUID } from "node:crypto";
 import { logger } from "@avocado/core/qos";
 import { CHUNK_SIZE } from "@avocado/core/machines";
@@ -143,7 +136,7 @@ export class FileCapabilityHandler {
     }
 
     const buf = Buffer.from(data, "base64");
-    session.hasher.update(buf);
+    session.hasher.update(new Uint8Array(buf));
     session.writeStream.write(buf);
     session.receivedSize += buf.length;
     session.nextSeq++;
@@ -239,7 +232,7 @@ export class FileCapabilityHandler {
       const { readFile } = await import("node:fs/promises");
       const buf = await readFile(srcPath);
       const hasher = createHash("sha256");
-      hasher.update(buf);
+      hasher.update(new Uint8Array(buf));
       const sha256 = hasher.digest("hex");
 
       let seq = 0;

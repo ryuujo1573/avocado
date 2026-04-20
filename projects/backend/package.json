@@ -2,6 +2,12 @@
   "name": "avocado-server",
   "private": true,
   "type": "module",
+  "exports": {
+    "./app": {
+      "import": "./src/app.tsx",
+      "types": "./src/app.tsx"
+    }
+  },
   "scripts": {
     "dev": "bun --hot run src/main.ts",
     "dev.node": "tsx watch src/main.ts",

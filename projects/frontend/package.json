@@ -26,6 +26,7 @@
     "qwik": "qwik"
   },
   "devDependencies": {
+    "avocado-server": "workspace:*",
     "@builder.io/qwik": "^1.19.2",
     "@builder.io/qwik-city": "^1.19.2",
     "@tailwindcss/typography": "^0.5.13",
@@ -49,6 +50,7 @@
   "dependencies": {
     "@avocado/core": "workspace:latest",
     "@qwikest/icons": "^0.0.13",
+    "hono": "^4.3.3",
     "@xterm/xterm": "^5.5.0",
     "@xterm/addon-fit": "^0.10.0",
     "daisyui": "^4.11.1"

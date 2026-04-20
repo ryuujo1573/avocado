@@ -80,6 +80,12 @@ export const FileDownloadCapability = z.object({
   path: z.string(),
 });
 
+export type FileUploadCapability = z.infer<typeof FileUploadCapability>;
+export type FileDownloadCapability = z.infer<typeof FileDownloadCapability>;
+
+// Note: the protocol doesn't currently support capabilities other than shell/file,
+// but we use a discriminated union here to allow for future extensibility.
+
 export const OpenChannel = z.object({
   kind: z.literal("open-channel"),
   channelId: z.string(),

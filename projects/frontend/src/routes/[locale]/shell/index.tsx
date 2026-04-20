@@ -1,7 +1,10 @@
 /**
  * Remote shell page.
- * Uses WebRTC DataChannel (via the signaling established over the dashboard WS)
- * to open a PTY on the agent and render it via xterm.js.
+ * Uses a WS relay through the backend to open a PTY on the agent
+ * and render it via xterm.js.
+ *
+ * Flow: browser ──WS──▶ backend ──WS──▶ agent
+ *       browser ◀──WS── backend ◀──WS── agent
  */
 import {
   component$,
@@ -16,23 +19,14 @@ import type { DocumentHead } from "@builder.io/qwik-city";
 import { useLocation, useNavigate } from "@builder.io/qwik-city";
 import { logger } from "@avocado/core/qos";
 import { localize } from "compiled-i18n";
-
-const BACKEND_URL =
-  typeof import.meta.env !== "undefined"
-    ? import.meta.env.PUBLIC_BACKEND_URL ?? ""
-    : "";
+import { wsBaseUrl } from "~/lib/api";
 
 type State = {
   status: "connecting" | "open" | "closed" | "error";
   errorMsg: string;
-  // non-serializable handles stored via noSerialize
   // biome-ignore lint/suspicious/noExplicitAny: xterm Terminal type
   terminal: NoSerialize<any> | null;
   ws: NoSerialize<WebSocket> | null;
-  // biome-ignore lint/suspicious/noExplicitAny: RTCPeerConnection
-  pc: NoSerialize<any> | null;
-  // biome-ignore lint/suspicious/noExplicitAny: RTCDataChannel
-  dc: NoSerialize<any> | null;
 };
 
 export default component$(() => {
@@ -46,8 +40,6 @@ export default component$(() => {
     errorMsg: "",
     terminal: null,
     ws: null,
-    pc: null,
-    dc: null,
   });
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional one-time setup
@@ -56,9 +48,6 @@ export default component$(() => {
     const sessionId = params.get("sessionId");
     const agentId = params.get("agentId");
     const traceId = params.get("traceId");
-    const turnUsername = params.get("turnUsername");
-    const turnCredential = params.get("turnCredential");
-    const turnUrls: string[] = JSON.parse(params.get("turnUrls") ?? "[]");
     const accessToken = localStorage.getItem("accessToken");
 
     if (!sessionId || !agentId || !accessToken) {
@@ -85,63 +74,37 @@ export default component$(() => {
       fitAddon.fit();
     }
 
-    // ── Open dashboard WebSocket (for signaling) ──────────────────────────
-    const wsBase = BACKEND_URL
-      ? BACKEND_URL.replace(/^http/, "ws")
-      : `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}`;
+    // ── Open dashboard WebSocket ──────────────────────────────────────────
+    const wsBase = wsBaseUrl();
     const wsUrl = new URL("/ws/dashboard", wsBase);
     wsUrl.searchParams.set("token", accessToken);
     const ws = new WebSocket(wsUrl.toString());
     state.ws = noSerialize(ws);
 
-    // ── Set up RTCPeerConnection (offerer side = browser) ─────────────────
-    const iceServers: RTCIceServer[] = [
-      { urls: "stun:stun.l.google.com:19302" },
-    ];
-    if (turnUsername && turnCredential && turnUrls.length > 0) {
-      iceServers.push({
-        urls: turnUrls,
-        username: turnUsername,
-        credential: turnCredential,
-      });
-    }
-
-    const pc = new RTCPeerConnection({ iceServers });
-    state.pc = noSerialize(pc);
-
-    // Create the shell DataChannel before offer
-    const dc = pc.createDataChannel("shell", { ordered: true });
-    state.dc = noSerialize(dc);
-
-    dc.onopen = () => {
-      state.status = "open";
-      logger.i("[%o] DataChannel open", traceId);
-
-      const { cols, rows } = term;
-
-      // Open shell channel on agent
-      dc.send(
+    ws.onopen = () => {
+      logger.i("[%o] Dashboard WS open — sending open-channel", traceId);
+      ws.send(
         JSON.stringify({
           kind: "open-channel",
           channelId,
           sessionId,
-          capability: { kind: "shell", cols, rows },
+          capability: {
+            kind: "shell",
+            cols: term.cols,
+            rows: term.rows,
+          },
         }),
       );
+      state.status = "open";
     };
 
-    dc.onclose = () => {
-      state.status = "closed";
-      term.writeln("\r\n\x1b[33m[connection closed]\x1b[0m");
-    };
-
-    dc.onmessage = (e) => {
+    ws.onmessage = (e) => {
       if (typeof e.data !== "string") return;
       try {
         const msg = JSON.parse(e.data);
         switch (msg.kind) {
           case "shell-output":
-            term.write(Buffer.from(msg.data, "base64"));
+            term.write(Uint8Array.from(atob(msg.data), (c) => c.charCodeAt(0)));
             break;
           case "shell-exit":
             term.writeln(`\r\n\x1b[33m[process exited: ${msg.code}]\x1b[0m`);
@@ -151,32 +114,54 @@ export default component$(() => {
             term.writeln("\r\n\x1b[33m[channel closed]\x1b[0m");
             state.status = "closed";
             break;
+          case "error":
+            logger.w("[%o] Server error: %o", traceId, msg.message);
+            state.status = "error";
+            state.errorMsg = msg.message ?? "server error";
+            break;
           default:
             break;
         }
       } catch {
-        // ignore parse errors
+        // ignore parse errors from unrelated dashboard messages
       }
     };
 
-    // Forward xterm keystrokes → DataChannel
+    ws.onclose = (e) => {
+      if (state.status === "open" || state.status === "connecting") {
+        state.status = "error";
+        state.errorMsg = `WebSocket closed: ${e.reason || e.code}`;
+      }
+      logger.i("[%o] Dashboard WS closed", traceId);
+    };
+
+    ws.onerror = () => {
+      state.status = "error";
+      state.errorMsg = "WebSocket error";
+    };
+
+    // ── Forward xterm keystrokes → WS ────────────────────────────────────
     term.onData((data) => {
-      if (dc.readyState === "open") {
-        dc.send(
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(
           JSON.stringify({
             kind: "shell-input",
             channelId,
-            data: Buffer.from(data).toString("base64"),
+            data: btoa(
+              Array.from(new TextEncoder().encode(data), (b) =>
+                String.fromCharCode(b),
+              ).join(""),
+            ),
           }),
         );
       }
     });
 
-    // Handle terminal resize
+    // ── Handle terminal resize ────────────────────────────────────────────
     const resizeObserver = new ResizeObserver(() => {
       fitAddon.fit();
-      if (dc.readyState === "open") {
-        dc.send(
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(
           JSON.stringify({
             kind: "shell-resize",
             channelId,
@@ -187,88 +172,12 @@ export default component$(() => {
       }
     });
     if (termRef.value) resizeObserver.observe(termRef.value);
-
-    // ICE candidate relay
-    pc.onicecandidate = (e) => {
-      if (e.candidate && ws.readyState === WebSocket.OPEN) {
-        ws.send(
-          JSON.stringify({
-            kind: "ice-candidate",
-            sessionId,
-            candidate: JSON.stringify(e.candidate),
-            sdpMid: e.candidate.sdpMid ?? null,
-            sdpMLineIndex: e.candidate.sdpMLineIndex ?? null,
-          }),
-        );
-      }
-    };
-
-    pc.onconnectionstatechange = () => {
-      logger.i("[%o] RTCPeerConnection state: %o", traceId, pc.connectionState);
-      if (
-        pc.connectionState === "failed" ||
-        pc.connectionState === "disconnected"
-      ) {
-        state.status = "error";
-        state.errorMsg = `WebRTC ${pc.connectionState}`;
-      }
-    };
-
-    // WS open → create and send offer
-    ws.onopen = async () => {
-      try {
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
-
-        ws.send(
-          JSON.stringify({
-            kind: "signal-offer",
-            sessionId,
-            sdp: offer.sdp!,
-          }),
-        );
-      } catch (err) {
-        state.status = "error";
-        state.errorMsg = String(err);
-      }
-    };
-
-    ws.onmessage = async (e) => {
-      if (typeof e.data !== "string") return;
-      try {
-        const msg = JSON.parse(e.data);
-        switch (msg.kind) {
-          case "signal-answer": {
-            await pc.setRemoteDescription({
-              type: "answer",
-              sdp: msg.sdp,
-            });
-            break;
-          }
-          case "ice-candidate": {
-            const candidate = JSON.parse(msg.candidate);
-            await pc.addIceCandidate(candidate);
-            break;
-          }
-          default:
-            break;
-        }
-      } catch (err) {
-        logger.w("Shell WS message error: %o", err);
-      }
-    };
-
-    ws.onerror = () => {
-      state.status = "error";
-      state.errorMsg = "WebSocket error";
-    };
   });
 
   const close$ = $(async () => {
     state.ws?.close();
-    state.dc?.close();
-    state.pc?.close();
-    const locale = loc.params.locale ?? "en";
+    const locale =
+      loc.url.pathname.split("/").find((s) => s.length === 2) ?? "en";
     await nav(`/${locale}/`);
   });
 

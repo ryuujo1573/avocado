@@ -9,6 +9,8 @@
     "core": "bun --filter @avocado/core",
     "netstat": "bun --filter @avocado/netstat-lib",
     "agent": "bun --filter ./projects/agent",
+    "agent:build": "bun --filter ./projects/agent run build",
+    "agent:build:all": "bun --filter ./projects/agent run build:all",
     "app": "bun --cwd ./projects/frontend",
     "api": "bun --cwd ./projects/backend",
     "demo": "bash ./scripts/demo.sh",

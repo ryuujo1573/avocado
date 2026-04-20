@@ -1,16 +1,17 @@
-import { component$, useSignal, useStore, $ } from "@builder.io/qwik";
+import {
+  component$,
+  getLocale,
+  useSignal,
+  useStore,
+  $,
+} from "@builder.io/qwik";
 import type { DocumentHead } from "@builder.io/qwik-city";
-import { useNavigate, useLocation } from "@builder.io/qwik-city";
+import { useNavigate } from "@builder.io/qwik-city";
 import { localize } from "compiled-i18n";
-
-const BACKEND_URL =
-  typeof import.meta.env !== "undefined"
-    ? import.meta.env.PUBLIC_BACKEND_URL ?? ""
-    : "";
+import { apiClient } from "~/lib/api";
 
 export default component$(() => {
   const nav = useNavigate();
-  const loc = useLocation();
 
   const form = useStore({ email: "operator@avocado.local", password: "" });
   const error = useSignal("");
@@ -20,15 +21,13 @@ export default component$(() => {
     error.value = "";
     loading.value = true;
     try {
-      const res = await fetch(`${BACKEND_URL}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: form.email, password: form.password }),
+      const res = await apiClient.auth.login.$post({
+        json: { email: form.email, password: form.password },
       });
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({ error: "unknown error" }));
-        error.value = body.error ?? "login failed";
+        error.value = (body as { error?: string }).error ?? "login failed";
         return;
       }
 
@@ -39,8 +38,7 @@ export default component$(() => {
       localStorage.setItem("userName", name);
 
       // Redirect back to the locale root (fleet page)
-      const locale = loc.params.locale ?? "en";
-      await nav(`/${locale}/`);
+      await nav(`/${getLocale("en")}/`);
     } catch (e) {
       error.value = "network error — is the server running?";
     } finally {

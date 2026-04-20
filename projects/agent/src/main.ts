@@ -83,8 +83,8 @@ async function enroll(token: string, serverUrl: string): Promise<AgentConfig> {
   });
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: "unknown" }));
-    throw new Error(`Enrollment failed: ${body.error}`);
+    const body = await res.json().catch(() => null);
+    throw new Error(`Enrollment failed (${res.status}): ${body?.error ?? res.statusText}`);
   }
 
   const { agentId, credential } = (await res.json()) as {

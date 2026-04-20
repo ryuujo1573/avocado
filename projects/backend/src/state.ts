@@ -43,6 +43,9 @@ export const dashboards = new Map<string, DashboardEntry>();
 // keyed by sessionId
 export const sessions = new Map<string, SessionEntry>();
 
+// keyed by channelId → sessionId (for routing agent→dashboard messages)
+export const channelSessions = new Map<string, string>();
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 export function broadcastToDashboards(orgId: string, data: string): void {

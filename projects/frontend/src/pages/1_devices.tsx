@@ -20,6 +20,7 @@ import {
   HiArrowUpTraySolid,
 } from "@qwikest/icons/heroicons";
 import { localize } from "compiled-i18n";
+import { apiClient, wsBaseUrl } from "~/lib/api";
 
 export const pageMeta: PageMeta = {
   get name() {
@@ -44,9 +45,6 @@ const osIconMap: Record<string, JSXOutput> = {
   linux: <BsUbuntu />,
 };
 
-const BACKEND_URL =
-  import.meta.env.PUBLIC_BACKEND_URL ?? "http://localhost:3000";
-
 /** Extract locale from /en/... or /zh/... pathname */
 function localeFromPath(pathname: string): string {
   return pathname.split("/").find((s) => s.length === 2) ?? "en";
@@ -69,9 +67,7 @@ export default component$(() => {
       return;
     }
 
-    const wsBase = BACKEND_URL
-      ? BACKEND_URL.replace(/^http/, "ws")
-      : `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}`;
+    const wsBase = wsBaseUrl();
     const wsUrl = new URL("/ws/dashboard", wsBase);
     wsUrl.searchParams.set("token", accessToken);
 
@@ -151,18 +147,17 @@ export default component$(() => {
     const accessToken = localStorage.getItem("accessToken");
     if (!accessToken) return;
 
-    const res = await fetch(`${BACKEND_URL}/sessions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({ agentId }),
-    });
+    const res = await apiClient.sessions.$post(
+      { json: { agentId } },
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+    );
 
     if (!res.ok) {
       const body = await res.json().catch(() => ({ error: "unknown" }));
-      logger.e("Failed to create session: %o", body.error);
+      logger.e(
+        "Failed to create session: %o",
+        (body as { error?: string }).error,
+      );
       return;
     }
 

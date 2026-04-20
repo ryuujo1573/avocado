@@ -53,7 +53,7 @@
       },
       "devDependencies": {
         "@tsconfig/node20": "^20.1.4",
-        "@types/node": "^20.11.17",
+        "@types/node": "^20.12.5",
         "tsx": "^4.7.1",
         "typescript": "^5.4.5",
         "vite": "^5.2.10",
@@ -90,6 +90,7 @@
         "@xterm/addon-fit": "^0.10.0",
         "@xterm/xterm": "^5.5.0",
         "daisyui": "^4.11.1",
+        "hono": "^4.3.3",
       },
       "devDependencies": {
         "@builder.io/qwik": "^1.19.2",
@@ -100,6 +101,7 @@
         "@typescript-eslint/eslint-plugin": "^7.3.1",
         "@typescript-eslint/parser": "^7.3.1",
         "autoprefixer": "^10.4.14",
+        "avocado-server": "workspace:*",
         "compiled-i18n": "^1.0.0",
         "eslint": "^8.57.0",
         "eslint-plugin-qwik": "^1.5.2",

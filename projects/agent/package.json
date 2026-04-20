@@ -6,7 +6,14 @@
   "scripts": {
     "dev": "bun src/main.ts",
     "start": "bun src/main.ts",
-    "test": "vitest"
+    "test": "vitest",
+    "build": "bun build --compile src/main.ts --outfile dist/agent",
+    "build:linux-x64": "bun build --compile --target=bun-linux-x64 src/main.ts --outfile dist/agent-linux-x64",
+    "build:linux-arm64": "bun build --compile --target=bun-linux-arm64 src/main.ts --outfile dist/agent-linux-arm64",
+    "build:darwin-x64": "bun build --compile --target=bun-darwin-x64 src/main.ts --outfile dist/agent-darwin-x64",
+    "build:darwin-arm64": "bun build --compile --target=bun-darwin-arm64 src/main.ts --outfile dist/agent-darwin-arm64",
+    "build:windows-x64": "bun build --compile --target=bun-windows-x64 src/main.ts --outfile dist/agent-windows-x64.exe",
+    "build:all": "bun run build:linux-x64 && bun run build:linux-arm64 && bun run build:darwin-x64 && bun run build:darwin-arm64 && bun run build:windows-x64"
   },
   "dependencies": {
     "@avocado/core": "workspace:^",
@@ -15,7 +22,7 @@
   },
   "devDependencies": {
     "@tsconfig/node20": "^20.1.4",
-    "@types/node": "^20.11.17",
+    "@types/node": "^20.12.5",
     "tsx": "^4.7.1",
     "typescript": "^5.4.5",
     "vite": "^5.2.10",
